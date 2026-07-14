@@ -1,0 +1,571 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
+<title>A Birthday Message for Nico</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Caveat:wght@500;600;700&family=Fraunces:ital,wght@0,500;1,500;1,600&family=Inter:wght@400;500;600;700&display=swap');
+
+  :root{
+    --paper:#F7F1E4;
+    --paper-dot: rgba(43,38,32,0.06);
+    --card-white:#FFFFFF;
+    --ink-dark:#2B2620;
+    --ink-soft:#6B6255;
+    --line:#E4DAC4;
+    --red:#B91C1C;
+  }
+  *{box-sizing:border-box;}
+  html,body{margin:0;padding:0;}
+  body{
+    background:
+      radial-gradient(var(--paper-dot) 1px, transparent 1px) 0 0/22px 22px,
+      var(--paper);
+    color:var(--ink-dark);
+    font-family:'Inter',sans-serif;
+    min-height:100vh;
+    padding:28px 16px 60px;
+    overscroll-behavior:none;
+  }
+  .wrap{max-width:1080px;margin:0 auto;}
+  header{text-align:center; margin-bottom:22px;}
+  header h1{
+    font-family:'Fraunces',serif; font-style:italic; font-weight:500;
+    font-size:clamp(20px,5.2vw,32px); white-space:nowrap; margin:0 0 8px; color:var(--ink-dark);
+  }
+  header p{margin:0 0 14px; color:var(--ink-soft); font-size:15px;}
+
+  .btn{
+    font-family:'Inter',sans-serif; font-weight:600; font-size:13.5px;
+    border:none; border-radius:9px; padding:10px 16px; cursor:pointer;
+    transition:transform .08s ease;
+  }
+  .btn:active{transform:scale(0.97);}
+  .btn-dark{background:var(--ink-dark); color:var(--paper);}
+  .btn:disabled{opacity:.4; cursor:not-allowed;}
+
+  .write-grid{display:grid; grid-template-columns:1fr 1fr; gap:34px; align-items:start;}
+  @media (max-width:840px){ .write-grid{grid-template-columns:1fr;} }
+
+  .field{margin-bottom:20px;}
+  .field label{
+    display:block; font-weight:600; font-size:13px; letter-spacing:.02em;
+    text-transform:uppercase; color:var(--ink-soft); margin-bottom:8px;
+  }
+  .field .hint{font-weight:400; text-transform:none; color:var(--ink-soft); opacity:.75; font-size:12px; margin-left:6px;}
+
+  .swatches{display:flex; gap:10px; flex-wrap:wrap;}
+  .swatch{
+    width:38px;height:38px;border-radius:50%; border:3px solid transparent; cursor:pointer;
+    display:flex;align-items:center;justify-content:center; transition:transform .1s ease, border-color .1s ease;
+  }
+  .swatch:hover{transform:translateY(-2px);}
+  .swatch.selected{border-color:var(--ink-dark);}
+  .swatch svg{width:16px;height:16px;opacity:0;}
+  .swatch.selected svg{opacity:1;}
+
+  input[type=text], textarea{
+    width:100%; font-family:'Inter',sans-serif; font-size:15px; padding:11px 13px;
+    border-radius:10px; border:1.5px solid var(--line); background:var(--card-white);
+    color:var(--ink-dark); resize:none;
+  }
+  input[type=text]:focus, textarea:focus{ outline:none; border-color:var(--ink-dark); }
+  .counter{text-align:right; font-size:11.5px; color:var(--ink-soft); margin-top:4px;}
+
+  .draw-wrap{
+    position:relative; border-radius:10px; border:1.5px solid var(--line);
+    background:var(--card-white); overflow:hidden; width:100%; max-width:280px; touch-action:none;
+  }
+  #drawCanvas{ display:block; width:100%; height:180px; touch-action:none; cursor:crosshair; }
+  .draw-empty-hint{
+    position:absolute; inset:0; display:flex;align-items:center;justify-content:center;
+    color:var(--ink-soft); font-size:12.5px; pointer-events:none; text-align:center; padding:0 20px;
+  }
+  .draw-controls{display:flex; gap:8px; margin-top:8px;}
+  .draw-controls button{
+    font-family:'Inter',sans-serif; font-size:12.5px; font-weight:600; padding:7px 12px;
+    border-radius:7px; border:1.5px solid var(--line); background:var(--card-white); color:var(--ink-soft); cursor:pointer;
+  }
+
+  .preview-sticky{position:sticky; top:20px;}
+  .preview-label{font-weight:600; font-size:13px; text-transform:uppercase; letter-spacing:.02em; color:var(--ink-soft); margin-bottom:10px;}
+  #previewCanvas{ width:100%; height:auto; display:block; border-radius:14px; box-shadow:0 10px 26px rgba(43,38,32,0.12), 0 2px 6px rgba(43,38,32,0.08); }
+
+  .submit-row{margin-top:22px; display:flex; align-items:center; gap:14px;}
+  .error-msg{color:var(--red); font-size:13px; font-weight:600;}
+
+  .modal-backdrop{
+    position:fixed; inset:0; background:rgba(43,38,32,0.45);
+    display:none; align-items:center; justify-content:center; z-index:100; padding:20px;
+  }
+  .modal-backdrop.active{display:flex;}
+  .modal-box{
+    background:var(--card-white); border-radius:14px; padding:26px;
+    max-width:340px; width:100%; text-align:center; box-shadow:0 20px 40px rgba(0,0,0,0.2);
+  }
+  .modal-box.success-modal-box{position:relative; padding:36px 18px; max-width:380px;}
+  .success-modal-box .success-modal-text{
+    font-family:'Fraunces',serif; font-style:normal; font-weight:700;
+    font-size:16px; line-height:1.35; color:var(--ink-dark);
+    text-align:center; margin:0 auto; max-width:100%; white-space:nowrap;
+  }
+
+  .confetti-piece{ position:absolute; top:-12px; will-change:transform, opacity; animation-name:confetti-fall; animation-timing-function:cubic-bezier(0.4,0.1,0.6,0.9); animation-iteration-count:1; }
+  @keyframes confetti-fall{ 0%{ transform:translateY(0) rotate(0deg); opacity:1; } 100%{ transform:translateY(105vh) rotate(600deg); opacity:0.85; } }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header>
+    <h1>A Birthday Message for Nico</h1>
+    <p>Celebrate Nico's birthday by writing a message below!</p>
+  </header>
+
+  <section id="panelWrite">
+    <div class="write-grid">
+      <div>
+        <div class="field">
+          <label>Pick your ink colour</label>
+          <div class="swatches" id="swatches"></div>
+        </div>
+        <div class="field">
+          <label>Your name</label>
+          <input type="text" id="nameInput" maxlength="30" placeholder="e.g. Kenji" />
+        </div>
+        <div class="field">
+          <label>Your message <span class="hint">(240 characters max)</span></label>
+          <textarea id="messageInput" rows="5" maxlength="240" placeholder="Happy birthday, Nico! ..."></textarea>
+          <div class="counter"><span id="charCount">0</span>/240</div>
+        </div>
+        <div class="field">
+          <label>Add a small doodle <span class="hint">(optional)</span></label>
+          <div class="draw-wrap">
+            <canvas id="drawCanvas"></canvas>
+            <div class="draw-empty-hint" id="drawHint">draw here with your finger or mouse</div>
+          </div>
+          <div class="draw-controls">
+            <button id="clearDrawBtn">Clear doodle</button>
+          </div>
+        </div>
+        <div class="submit-row">
+          <button class="btn btn-dark" id="submitBtn">Submit</button>
+          <span class="error-msg" id="errorMsg"></span>
+        </div>
+      </div>
+      <div class="preview-sticky">
+        <div class="preview-label">Preview</div>
+        <canvas id="previewCanvas"></canvas>
+      </div>
+    </div>
+  </section>
+</div>
+
+<div class="modal-backdrop" id="successModal">
+  <div class="modal-box success-modal-box">
+    <p class="success-modal-text">Your message has been added.<br>Thank you! 🎉</p>
+  </div>
+</div>
+
+<script type="module">
+import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
+import { getFirestore, collection, addDoc, serverTimestamp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
+
+const firebaseConfig = {
+  apiKey: "AIzaSyBLm-sxbwN5nIaXAODwLoNMvNazXXdUp6s",
+  authDomain: "nico-birthday.firebaseapp.com",
+  projectId: "nico-birthday",
+  storageBucket: "nico-birthday.firebasestorage.app",
+  messagingSenderId: "1053081594029",
+  appId: "1:1053081594029:web:3f424bd9f035d8620fbe24",
+  measurementId: "G-ZYZMVS7YL4"
+};
+const app = initializeApp(firebaseConfig);
+const db = getFirestore(app);
+
+const COLORS = [
+  {key:'purple', label:'Purple', hex:'#7C3AED'},
+  {key:'blue',   label:'Blue',   hex:'#1D4ED8'},
+  {key:'green',  label:'Green',  hex:'#15803D'},
+  {key:'yellow', label:'Yellow', hex:'#B45309'},
+  {key:'red',    label:'Red',    hex:'#B91C1C'},
+  {key:'pink',   label:'Pink',   hex:'#BE185D'},
+];
+
+let state = { color: null, name: '', message: '', hasDrawing: false };
+
+// ---------- swatches ----------
+const swatchesEl = document.getElementById('swatches');
+COLORS.forEach(c=>{
+  const el = document.createElement('div');
+  el.className='swatch';
+  el.style.background = c.hex;
+  el.title = c.label;
+  el.innerHTML = '<svg viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"></polyline></svg>';
+  el.addEventListener('click', ()=>{
+    document.querySelectorAll('.swatch').forEach(s=>s.classList.remove('selected'));
+    el.classList.add('selected');
+    state.color = c.hex;
+    if(state.hasDrawing){ recolorDrawing(c.hex); }
+    updateDrawStrokeColor();
+    clearError();
+    redrawPreview();
+  });
+  swatchesEl.appendChild(el);
+});
+
+// ---------- text inputs ----------
+const nameInput = document.getElementById('nameInput');
+const messageInput = document.getElementById('messageInput');
+const charCount = document.getElementById('charCount');
+nameInput.addEventListener('input', ()=>{ state.name = nameInput.value; clearError(); redrawPreview(); });
+messageInput.addEventListener('input', ()=>{
+  state.message = messageInput.value;
+  charCount.textContent = messageInput.value.length;
+  clearError();
+  redrawPreview();
+});
+
+// ---------- drawing pad ----------
+const drawCanvas = document.getElementById('drawCanvas');
+const drawHint = document.getElementById('drawHint');
+const dctx = drawCanvas.getContext('2d');
+let drawing = false, lastPt = null;
+const DPR = Math.min(window.devicePixelRatio || 1, 2);
+
+function sizeDrawCanvas(){
+  const rect = drawCanvas.getBoundingClientRect();
+  drawCanvas.width = rect.width * DPR;
+  drawCanvas.height = rect.height * DPR;
+  dctx.lineCap='round'; dctx.lineJoin='round';
+}
+window.addEventListener('resize', ()=>{
+  const snap = document.createElement('canvas');
+  snap.width = drawCanvas.width; snap.height = drawCanvas.height;
+  snap.getContext('2d').drawImage(drawCanvas,0,0);
+  sizeDrawCanvas();
+  dctx.drawImage(snap,0,0,snap.width,snap.height,0,0,drawCanvas.width,drawCanvas.height);
+});
+sizeDrawCanvas();
+
+function updateDrawStrokeColor(){ dctx.strokeStyle = state.color || '#2B2620'; }
+function getPt(e){
+  const rect = drawCanvas.getBoundingClientRect();
+  return { x:(e.clientX-rect.left)*DPR, y:(e.clientY-rect.top)*DPR };
+}
+['touchstart','touchmove','touchend'].forEach(evt=>{
+  drawCanvas.addEventListener(evt, (e)=>{ e.preventDefault(); }, {passive:false});
+});
+drawCanvas.addEventListener('pointerdown', (e)=>{
+  e.preventDefault();
+  drawCanvas.setPointerCapture(e.pointerId);
+  drawing = true; lastPt = getPt(e);
+  drawHint.style.display='none';
+  state.hasDrawing = true;
+});
+drawCanvas.addEventListener('pointermove', (e)=>{
+  if(!drawing) return;
+  e.preventDefault();
+  const pt = getPt(e);
+  dctx.strokeStyle = state.color || '#2B2620';
+  dctx.lineWidth = 4.2*DPR;
+  dctx.beginPath();
+  dctx.moveTo(lastPt.x, lastPt.y);
+  dctx.lineTo(pt.x, pt.y);
+  dctx.stroke();
+  lastPt = pt;
+}, {passive:false});
+function endStroke(){ if(!drawing) return; drawing = false; redrawPreview(); }
+drawCanvas.addEventListener('pointerup', endStroke);
+drawCanvas.addEventListener('pointercancel', endStroke);
+drawCanvas.addEventListener('pointerleave', ()=>{ if(drawing){ drawing=false; redrawPreview(); }});
+
+document.getElementById('clearDrawBtn').addEventListener('click', ()=>{
+  dctx.clearRect(0,0,drawCanvas.width,drawCanvas.height);
+  state.hasDrawing = false;
+  drawHint.style.display='flex';
+  redrawPreview();
+});
+
+function recolorDrawing(newColor){
+  const tmp = document.createElement('canvas');
+  tmp.width = drawCanvas.width; tmp.height = drawCanvas.height;
+  tmp.getContext('2d').drawImage(drawCanvas,0,0);
+  dctx.clearRect(0,0,drawCanvas.width,drawCanvas.height);
+  dctx.drawImage(tmp,0,0);
+  dctx.globalCompositeOperation='source-in';
+  dctx.fillStyle=newColor;
+  dctx.fillRect(0,0,drawCanvas.width,drawCanvas.height);
+  dctx.globalCompositeOperation='source-over';
+}
+
+function getCompressedIllustration(){
+  if(!state.hasDrawing) return null;
+  const maxDim = 260;
+  const scaleDown = Math.min(1, maxDim / Math.max(drawCanvas.width, drawCanvas.height));
+  const outW = Math.max(1, Math.round(drawCanvas.width*scaleDown));
+  const outH = Math.max(1, Math.round(drawCanvas.height*scaleDown));
+  const tmp = document.createElement('canvas');
+  tmp.width = outW; tmp.height = outH;
+  tmp.getContext('2d').drawImage(drawCanvas, 0,0, drawCanvas.width, drawCanvas.height, 0,0, outW, outH);
+  return tmp.toDataURL('image/png');
+}
+
+// ---------- card rendering ----------
+function seededRand(seed){ const x = Math.sin(seed*12.9898)*43758.5453; return x - Math.floor(x); }
+function roundRectPath(ctx,x,y,w,h,r){
+  ctx.beginPath();
+  ctx.moveTo(x+r,y);
+  ctx.arcTo(x+w,y,x+w,y+h,r);
+  ctx.arcTo(x+w,y+h,x,y+h,r);
+  ctx.arcTo(x,y+h,x,y,r);
+  ctx.arcTo(x,y,x+w,y,r);
+  ctx.closePath();
+}
+function addWavyEdge(ctx, sx,sy, ex,ey, amp, wavelength){
+  const dx=ex-sx, dy=ey-sy;
+  const len=Math.hypot(dx,dy);
+  if(len<1) return;
+  const ux=dx/len, uy=dy/len;
+  const nx=-uy, ny=ux;
+  let steps = Math.max(2, Math.round(len/wavelength));
+  if(steps % 2 === 0) steps += 1;
+  const stepLen = len/steps;
+  let sign=1;
+  for(let i=1;i<=steps;i++){
+    const t = stepLen*i;
+    const midT = t - stepLen/2;
+    const jitter = (seededRand(i*7.13+sx+sy*3.1)-0.5)*amp*0.4;
+    const cx = sx+ux*midT + nx*(amp*sign+jitter);
+    const cy = sy+uy*midT + ny*(amp*sign+jitter);
+    const ex2 = sx+ux*t, ey2 = sy+uy*t;
+    ctx.quadraticCurveTo(cx,cy,ex2,ey2);
+    sign*=-1;
+  }
+}
+function drawWavyBorder(ctx,x0,y0,x1,y1,color,scale){
+  const amp = 6.5*scale, wavelength = 26*scale;
+  ctx.strokeStyle = color; ctx.lineWidth = 2.4*scale;
+  ctx.lineJoin='round'; ctx.lineCap='round';
+  ctx.beginPath();
+  ctx.moveTo(x0,y0);
+  addWavyEdge(ctx, x0,y0, x1,y0, amp, wavelength);
+  addWavyEdge(ctx, x1,y0, x1,y1, amp, wavelength);
+  addWavyEdge(ctx, x1,y1, x0,y1, amp, wavelength);
+  addWavyEdge(ctx, x0,y1, x0,y0, amp, wavelength);
+  ctx.closePath();
+  ctx.stroke();
+}
+function wrapAroundIllustration(ctx, text, fullWidth, narrowWidth, illusTopY, lineHeight){
+  const paragraphs = (text || '').split('\n');
+  const lines = []; let y = 0;
+  paragraphs.forEach(p=>{
+    const words = p.split(' ');
+    let line = '';
+    words.forEach(w=>{
+      const maxW = (y+lineHeight > illusTopY) ? narrowWidth : fullWidth;
+      const test = line ? line+' '+w : w;
+      if(ctx.measureText(test).width > maxW && line){
+        lines.push(line); y += lineHeight; line = w;
+      } else { line = test; }
+    });
+    lines.push(line); y += lineHeight;
+  });
+  return lines;
+}
+function fitMessage(ctx, text, fullWidth, narrowWidth, illusTopY, maxHeight, maxSize, minSize){
+  let fontSize = maxSize, lines = [], lineHeight = fontSize*1.18;
+  while(fontSize >= minSize){
+    ctx.font = `700 ${fontSize}px 'Caveat', cursive`;
+    lineHeight = fontSize*1.18;
+    lines = wrapAroundIllustration(ctx, text, fullWidth, narrowWidth, illusTopY, lineHeight);
+    if(lines.length*lineHeight <= maxHeight) break;
+    fontSize -= 1;
+  }
+  return {fontSize, lines, lineHeight};
+}
+function loadImageCached(dataUrl){
+  return new Promise((resolve)=>{
+    if(!dataUrl){ resolve(null); return; }
+    const img = new Image();
+    img.onload = ()=>resolve(img);
+    img.onerror = ()=>resolve(null);
+    img.src = dataUrl;
+  });
+}
+async function renderCardToCanvas(canvas, card, scale){
+  const W = 600*scale, H = 400*scale;
+  canvas.width = W; canvas.height = H;
+  const ctx = canvas.getContext('2d');
+  ctx.clearRect(0,0,W,H);
+  roundRectPath(ctx,0,0,W,H,16*scale);
+  ctx.fillStyle = '#FFFFFF'; ctx.fill();
+  ctx.lineWidth = 1*scale; ctx.strokeStyle = '#EFE8D8'; ctx.stroke();
+
+  const margin = 24*scale;
+  drawWavyBorder(ctx, margin, margin, W-margin, H-margin, card.color, scale);
+
+  const pad = 50*scale;
+  const contentX = pad, contentY = pad;
+  const contentW = W - 2*pad, contentH = H - 2*pad;
+
+  let img = null, drawW = 0, drawH = 0;
+  const hasIllustration = !!card.illustration;
+  if(hasIllustration){
+    img = card.__img || await loadImageCached(card.illustration);
+    card.__img = img;
+    if(img){
+      const maxBox = 190*scale;
+      const ratio = img.naturalWidth && img.naturalHeight ? img.naturalWidth/img.naturalHeight : 1;
+      if(ratio >= 1){ drawW = maxBox; drawH = maxBox/ratio; }
+      else { drawH = maxBox; drawW = maxBox*ratio; }
+    }
+  }
+  const gap = img ? 16*scale : 0;
+  const illusTopY = img ? (contentH - drawH) : contentH + 999;
+
+  ctx.fillStyle = card.color;
+  ctx.textBaseline = 'alphabetic';
+  const reserve = 8*scale;
+  const {fontSize, lines, lineHeight} = fitMessage(
+    ctx, card.message, contentW, img ? (contentW - drawW - gap) : contentW,
+    illusTopY, contentH - reserve, 30*scale, 12*scale
+  );
+  ctx.font = `700 ${fontSize}px 'Caveat', cursive`;
+  let ty = contentY + fontSize;
+  lines.forEach(line=>{ ctx.fillText(line, contentX, ty); ty += lineHeight; });
+
+  const bottomY = contentY + contentH;
+  ctx.font = `600 ${fontSize}px 'Caveat', cursive`;
+  ctx.fillText(`— ${card.name}`, contentX, bottomY);
+
+  if(img){
+    const bx = contentX + contentW - drawW;
+    const by = bottomY - drawH;
+    ctx.drawImage(img, bx, by, drawW, drawH);
+  }
+}
+
+// ---------- live preview ----------
+const previewCanvas = document.getElementById('previewCanvas');
+let previewPending = false;
+async function redrawPreview(){
+  if(previewPending) return;
+  previewPending = true;
+  requestAnimationFrame(async ()=>{
+    const card = {
+      color: state.color || '#D8D2C2',
+      name: state.name || 'Your name',
+      message: state.message || 'Your message will appear here…',
+      illustration: state.hasDrawing ? getCompressedIllustration() : null,
+    };
+    await renderCardToCanvas(previewCanvas, card, 1.6);
+    previewPending = false;
+  });
+}
+function ensureFontsThenRedraw(){
+  if(document.fonts && document.fonts.ready){
+    document.fonts.load("700 30px 'Caveat'").then(()=>document.fonts.ready).then(redrawPreview);
+  } else { redrawPreview(); }
+}
+ensureFontsThenRedraw();
+setTimeout(redrawPreview, 600);
+
+// ---------- confetti ----------
+function launchConfetti(){
+  const colors = COLORS.map(c=>c.hex);
+  const container = document.createElement('div');
+  container.style.position = 'fixed';
+  container.style.inset = '0';
+  container.style.pointerEvents = 'none';
+  container.style.overflow = 'hidden';
+  container.style.zIndex = '200';
+  document.body.appendChild(container);
+  const count = 70;
+  for(let i=0; i<count; i++){
+    const piece = document.createElement('div');
+    piece.className = 'confetti-piece';
+    const color = colors[Math.floor(Math.random()*colors.length)];
+    const size = 6 + Math.random()*7;
+    const isRound = Math.random() > 0.5;
+    piece.style.left = (Math.random()*100) + 'vw';
+    piece.style.width = size + 'px';
+    piece.style.height = (isRound ? size : size*1.6) + 'px';
+    piece.style.background = color;
+    piece.style.borderRadius = isRound ? '50%' : '2px';
+    piece.style.animationDuration = (1.6 + Math.random()*1.2) + 's';
+    piece.style.animationDelay = (Math.random()*0.35) + 's';
+    container.appendChild(piece);
+  }
+  setTimeout(()=>{ container.remove(); }, 3200);
+}
+
+// ---------- submit ----------
+const errorMsg = document.getElementById('errorMsg');
+const successModal = document.getElementById('successModal');
+const successModalText = document.querySelector('.success-modal-text');
+function clearError(){ errorMsg.textContent=''; }
+successModal.addEventListener('click', (e)=>{
+  if(e.target === successModal){ successModal.classList.remove('active'); }
+});
+function fitSuccessModalText(){
+  if(!successModalText) return;
+  const maxSize = 16, minSize = 12;
+  let size = maxSize;
+  successModalText.style.fontSize = size+'px';
+  const available = successModalText.parentElement.clientWidth;
+  while(size > minSize && successModalText.scrollWidth > available){
+    size -= 1;
+    successModalText.style.fontSize = size+'px';
+  }
+}
+window.addEventListener('resize', ()=>{
+  if(successModal.classList.contains('active')) fitSuccessModalText();
+});
+
+document.getElementById('submitBtn').addEventListener('click', async ()=>{
+  const name = state.name.trim();
+  const message = state.message.trim();
+  if(!state.color){ errorMsg.textContent='Please pick an ink colour.'; return; }
+  if(!name){ errorMsg.textContent='Please add your name.'; return; }
+  if(!message){ errorMsg.textContent='Please write a message.'; return; }
+  clearError();
+
+  const btn = document.getElementById('submitBtn');
+  btn.disabled = true;
+  btn.textContent = 'Submitting…';
+
+  try{
+    await addDoc(collection(db, 'cards'), {
+      color: state.color,
+      name,
+      message,
+      illustration: state.hasDrawing ? getCompressedIllustration() : null,
+      createdAt: serverTimestamp(),
+    });
+  } catch(e){
+    console.error('save failed', e);
+    btn.disabled = false;
+    btn.textContent = 'Submit';
+    errorMsg.textContent = "Couldn't save your card — please try again.";
+    return;
+  }
+
+  btn.disabled = false;
+  btn.textContent = 'Submit';
+
+  successModal.classList.add('active');
+  fitSuccessModalText();
+  launchConfetti();
+  setTimeout(()=>{ successModal.classList.remove('active'); }, 3800);
+
+  document.querySelectorAll('.swatch').forEach(s=>s.classList.remove('selected'));
+  state.color = null; state.name = ''; state.message = ''; state.hasDrawing = false;
+  nameInput.value = ''; messageInput.value = ''; charCount.textContent = '0';
+  dctx.clearRect(0,0,drawCanvas.width,drawCanvas.height);
+  drawHint.style.display = 'flex';
+  redrawPreview();
+});
+</script>
+</body>
+</html>
