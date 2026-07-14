@@ -16,6 +16,17 @@
     --line:#E4DAC4;
     --red:#B91C1C;
   }
+  @media (prefers-color-scheme: dark){
+    :root{
+      --paper:#1E1B17;
+      --paper-dot: rgba(255,255,255,0.05);
+      --card-white:#2A2620;
+      --ink-dark:#F3ECDD;
+      --ink-soft:#B8AD98;
+      --line:#3D372C;
+      --red:#F87171;
+    }
+  }
   *{box-sizing:border-box;}
   html,body{margin:0;padding:0;}
   body{
@@ -29,10 +40,10 @@
     overscroll-behavior:none;
   }
   .wrap{max-width:1080px;margin:0 auto;}
-  header{text-align:center; margin-bottom:22px;}
+  header{text-align:center; margin-bottom:36px; padding-top:6px;}
   header h1{
     font-family:'Fraunces',serif; font-style:italic; font-weight:500;
-    font-size:clamp(20px,5.2vw,32px); white-space:nowrap; margin:0 0 8px; color:var(--ink-dark);
+    font-size:clamp(26px,6.4vw,42px); margin:0 0 14px; color:var(--ink-dark);
   }
   header p{margin:0 0 14px; color:var(--ink-soft); font-size:15px;}
 
@@ -119,7 +130,7 @@
 <div class="wrap">
   <header>
     <h1>A Birthday Message for Nico</h1>
-    <p>Celebrate Nico's birthday by writing a message below!</p>
+    <p>Celebrate&nbsp;Nico's&nbsp;birthday&nbsp;by&nbsp;writing a&nbsp;message&nbsp;below!</p>
   </header>
 
   <section id="panelWrite">
